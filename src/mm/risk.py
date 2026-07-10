@@ -1,7 +1,10 @@
+import logging
 from dataclasses import dataclass
 
 from src.config import AppConfig
-from src.models import MarginBalance
+from src.models import MarginBalance, Position
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -14,15 +17,40 @@ class RiskManager:
     def __init__(self, config: AppConfig):
         self.config = config
         self._session_start_equity: float | None = None
+        self._had_open_positions = False
 
-    def check(self, balance: MarginBalance, max_vol_pct: float) -> RiskState:
+    @staticmethod
+    def _has_open_positions(positions: list[Position]) -> bool:
+        return any(float(p.net_quantity) > 0 for p in positions)
+
+    def check(
+        self,
+        balance: MarginBalance,
+        max_vol_pct: float,
+        positions: list[Position] | None = None,
+    ) -> RiskState:
         equity = float(balance.margin_balance)
+        positions = positions or []
+        has_positions = self._has_open_positions(positions)
 
-        if self._session_start_equity is None:
-            self._session_start_equity = equity
+        # Manual market close → flat account: reset baseline so quoting continues.
+        if not has_positions:
+            if self._had_open_positions or self._session_start_equity is None:
+                self._session_start_equity = equity
+                if self._had_open_positions:
+                    logger.info(
+                        "Positions flat — session equity baseline reset to $%.2f (manual close safe)",
+                        equity,
+                    )
+            self._had_open_positions = False
+        else:
+            self._had_open_positions = True
+            if self._session_start_equity is None:
+                self._session_start_equity = equity
 
         session_pnl = equity - self._session_start_equity
-        if session_pnl <= -self.config.risk.daily_loss_limit_usd:
+        # Only enforce session loss while holding inventory (bot MM risk, not manual exits).
+        if has_positions and session_pnl <= -self.config.risk.daily_loss_limit_usd:
             return RiskState(False, f"session loss ${abs(session_pnl):.2f} exceeds limit")
 
         if not self.config.risk.shared_account_mode and balance.margin_ratio_pct > self.config.risk.max_margin_ratio_pct:

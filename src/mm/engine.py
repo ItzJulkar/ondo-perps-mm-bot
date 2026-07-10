@@ -103,7 +103,7 @@ class MarketMakerEngine:
         vols = [self.exchange.get_realized_vol_pct(m) for m in self.config.markets]
         max_vol = max(vols) if vols else 0.0
 
-        risk = self.risk.check(balance, max_vol)
+        risk = self.risk.check(balance, max_vol, positions)
         if not risk.ok:
             logger.warning("MM paused: %s", risk.reason)
             for market in self.config.markets:
