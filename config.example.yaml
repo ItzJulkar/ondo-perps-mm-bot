@@ -1,0 +1,44 @@
+markets:
+  - XAU-USD.P
+  - XAG-USD.P
+
+api:
+  base_url: https://api.ondoperps.xyz
+
+leverage: 20
+
+mm:
+  touch_offset_ticks: 1
+  base_half_spread_bps: 3
+  max_half_spread_bps: 10
+  vol_spread_mult: 0.8
+  inventory_skew_bps: 8
+  max_skew_bps: 15
+  max_skew_ticks: 3
+  levels_per_side: 1
+  level_spacing_ticks: 2
+  quote_refresh_sec: 8
+  margin_budget_pct: 40
+
+portfolio:
+  hedge_enabled: true
+  xag_beta_to_xau: 0.75
+  max_portfolio_delta_usd: 18
+  portfolio_skew_bps: 3
+
+risk:
+  shared_account_mode: true
+  max_margin_ratio_pct: 35
+  daily_loss_limit_usd: 0.75
+  min_available_margin_usd: 0.50
+  pause_on_vol_pct: 0.80
+
+fees:
+  maker_pct: 0.01
+  min_edge_bps: 2
+
+bot:
+  poll_interval_sec: 2
+  dry_run: false
+  log_level: INFO
+  order_prefix: pmm_

@@ -1,0 +1,45 @@
+markets:
+  - XAU-USD.P
+  - XAG-USD.P
+
+api:
+  base_url: https://api.ondoperps.xyz
+
+leverage: 20
+
+# Pro MM: join the touch (like your single-maker bot), skew for inventory
+mm:
+  touch_offset_ticks: 1        # 1 tick from best bid/ask — close enough to fill
+  base_half_spread_bps: 3      # tight half-spread cap anchor
+  max_half_spread_bps: 10      # never quote wider than this per side
+  vol_spread_mult: 0.8         # small vol widening (fixed: was 80-200bps bug)
+  inventory_skew_bps: 8        # shift quotes when inventory builds
+  max_skew_bps: 15             # max reservation shift
+  max_skew_ticks: 3            # max tick shift from inventory (subtle)
+  levels_per_side: 1
+  level_spacing_ticks: 2       # deeper levels behind touch
+  quote_refresh_sec: 8         # min wait before cancel/replace (let queue fill)
+  margin_budget_pct: 40
+
+portfolio:
+  hedge_enabled: true
+  xag_beta_to_xau: 0.75        # XAG ~75% beta vs XAU for metals hedge
+  max_portfolio_delta_usd: 18  # max net long/short metals exposure (USD)
+  portfolio_skew_bps: 3        # extra skew when portfolio delta is high
+
+risk:
+  shared_account_mode: true    # run alongside single-maker bot on same API key
+  max_margin_ratio_pct: 35     # only checked when shared_account_mode is false
+  daily_loss_limit_usd: 0.75   # stop quoting if session loss exceeds this
+  min_available_margin_usd: 0.50
+  pause_on_vol_pct: 0.80       # pause if 1h realized vol above this %
+
+fees:
+  maker_pct: 0.01              # 1bp promotional maker fee
+  min_edge_bps: 2              # never quote tighter than fees + edge
+
+bot:
+  poll_interval_sec: 2
+  dry_run: false
+  log_level: INFO
+  order_prefix: pmm_

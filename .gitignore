@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+logs/
+mm-bot.pid
+mm-bot.stop
+mm-bot.safe_exit
+.venv/
